@@ -38,7 +38,7 @@ public class User implements UserDetails {
     private long id;
 
     @NotBlank
-    private String email;
+    private String login;
 
     @ToString.Exclude
     @OneToMany
@@ -56,7 +56,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return this.login;
     }
 
     @Override

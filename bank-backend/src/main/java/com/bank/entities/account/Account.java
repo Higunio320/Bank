@@ -1,19 +1,18 @@
-package com.bank.entities.user.password;
+package com.bank.entities.account;
 
-import jakarta.persistence.ElementCollection;
+import com.bank.entities.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -21,28 +20,32 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Builder
-@AllArgsConstructor
-public class Password {
+public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
-    @ElementCollection
-    private List<Integer> whichChars;
+    private String accountNumber;
 
-    private String hash;
+    @Size(max = 100)
+    private String idNumber;
+
+    @Size(max = 100)
+    private String cardNumber;
+
+    @OneToOne
+    private User user;
 
     @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+    public final boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null) return false;
+        Class<?> oEffectiveClass = object instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : object.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Password password = (Password) o;
-        return Objects.equals(getId(), password.getId());
+        Account account = (Account) object;
+        return getId() != null && Objects.equals(getId(), account.getId());
     }
 
     @Override
