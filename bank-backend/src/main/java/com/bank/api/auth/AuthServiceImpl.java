@@ -14,6 +14,7 @@ import com.bank.entities.user.interfaces.UserRepository;
 import com.bank.entities.user.password.Password;
 import com.bank.entities.user.password.interfaces.PasswordRepository;
 import com.bank.utils.exceptions.authorization.BadCredentialsException;
+import com.bank.utils.exceptions.authorization.UserBlockedException;
 import com.bank.utils.exceptions.tokens.ExpiredTokenException;
 import com.bank.utils.exceptions.tokens.InvalidTokenException;
 import com.bank.utils.passwords.interfaces.PasswordGenerator;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +69,18 @@ public class AuthServiceImpl implements AuthService {
             indexes = createDummyIndexes();
         } else {
             User user = userOptional.get();
+
+            Instant unblockTime = user.getUnblockTime();
+
+            if(unblockTime.isAfter(Instant.now())) {
+                Duration duration = Duration.between(Instant.now(), unblockTime);
+                throw new UserBlockedException(
+                        duration.toDaysPart(),
+                        duration.toHoursPart(),
+                        duration.toMinutesPart(),
+                        duration.toSecondsPart()
+                );
+            }
 
             RandomGenerator random = new SecureRandom();
 
@@ -140,13 +154,23 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Authenticating user: {}", username);
 
-        authenticationManager.authenticate(
-                new BankAuthentication(
-                        username,
-                        password,
-                        indexes
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new BankAuthentication(
+                            username,
+                            password,
+                            indexes
+                    )
+            );
+        } catch (Exception ignored) {
+            user.increaseIncorrectLoginAttempts();
+            userRepository.save(user);
+            throw new BadCredentialsException();
+        }
+
+        log.info("User authenticated, resetting login attempts");
+        user.resetIncorrectLoginAttempts();
+        userRepository.save(user);
 
         String jwtToken = jwtService.generateAuthToken(user);
 
@@ -168,6 +192,8 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .login(username)
                 .passwords(passwords)
+                .incorrectLoginAttempts(0)
+                .unblockTime(Instant.now().minusSeconds(5L))
                 .build();
 
         log.info("Saved user: {}", userRepository.save(user));
@@ -176,6 +202,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public final void logout(String token) {
         log.info("Logging out user");
+
         if(invalidTokenRepository.existsByToken(token)) {
             log.info(TOKEN_ALREADY_USED);
             throw new ExpiredTokenException();

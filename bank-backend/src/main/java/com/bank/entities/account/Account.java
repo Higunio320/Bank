@@ -29,9 +29,11 @@ public class Account {
     private String accountNumber;
 
     @Size(max = 100)
+    @ToString.Exclude
     private String idNumber;
 
     @Size(max = 100)
+    @ToString.Exclude
     private String cardNumber;
 
     @OneToOne

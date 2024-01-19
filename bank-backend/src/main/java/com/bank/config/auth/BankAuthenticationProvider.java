@@ -1,14 +1,12 @@
 package com.bank.config.auth;
 
 import com.bank.entities.user.User;
-import com.bank.entities.user.interfaces.UserRepository;
 import com.bank.entities.user.password.Password;
 import com.bank.utils.exceptions.authorization.BadCredentialsException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +30,7 @@ public class BankAuthenticationProvider implements AuthenticationProvider {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if(!(authentication instanceof BankAuthentication bankAuthentication) || !(userDetails instanceof User user)) {
-            throw new BadCredentialsException();
+            return null;
         }
 
         List<Integer> indexes = bankAuthentication.getIndexes();
