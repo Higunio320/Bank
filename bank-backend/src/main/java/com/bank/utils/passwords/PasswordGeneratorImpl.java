@@ -3,6 +3,7 @@ package com.bank.utils.passwords;
 import com.bank.entities.user.password.Password;
 import com.bank.utils.passwords.interfaces.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -10,9 +11,11 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.random.RandomGenerator;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PasswordGeneratorImpl implements PasswordGenerator {
 
     private static final double MAX_COMBINATION_PERCENTAGE = 0.4;
@@ -27,7 +30,7 @@ public class PasswordGeneratorImpl implements PasswordGenerator {
 
         List<List<Integer>> indexList = new ArrayList<>(numberOfPasswords);
         List<String> passwords = new ArrayList<>(numberOfPasswords);
-        SecureRandom random = new SecureRandom();
+        RandomGenerator random = new SecureRandom();
 
         while(indexList.size() < numberOfPasswords) {
             List<Integer> indexes = new ArrayList<>(passwordLength);

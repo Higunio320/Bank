@@ -41,6 +41,7 @@ public class EncryptionServiceImpl implements EncryptionService {
 
             return Base64.getEncoder().encodeToString(hash);
         } catch (Exception e) {
+            //TODO: handle exception
             log.warn("Exception while generating key");
             log.warn(e.getMessage());
             return null;
@@ -53,16 +54,21 @@ public class EncryptionServiceImpl implements EncryptionService {
         Key secretKey = new SecretKeySpec(decodedKey, "AES");
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+
             byte[] iv = new byte[IV_LENGTH];
             new SecureRandom().nextBytes(iv);
+
             AlgorithmParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH, iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmParameterSpec);
             byte[] encryptedText = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
             byte[] finalCipherText = new byte[iv.length + encryptedText.length];
+
             System.arraycopy(iv, 0, finalCipherText, 0, iv.length);
             System.arraycopy(encryptedText, 0, finalCipherText, iv.length, encryptedText.length);
+
             return Base64.getEncoder().encodeToString(finalCipherText);
         } catch (Exception e) {
+            //TODO: handle exception
             log.warn("Exception while encrypting text");
             log.warn(e.getMessage());
             return null;
@@ -75,14 +81,18 @@ public class EncryptionServiceImpl implements EncryptionService {
         Key secretKey = new SecretKeySpec(decodedKey, "AES");
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+
             byte[] encryptedText = Base64.getDecoder().decode(text);
             byte[] iv = new byte[IV_LENGTH];
             System.arraycopy(encryptedText, 0, iv, 0, iv.length);
+
             AlgorithmParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH, iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
             byte[] decryptedText = cipher.doFinal(encryptedText, iv.length, encryptedText.length - iv.length);
+
             return new String(decryptedText, StandardCharsets.UTF_8);
         } catch (Exception e) {
+            //TODO: handle exception
             log.warn("Exception while decrypting text");
             log.warn(e.getMessage());
             return null;
