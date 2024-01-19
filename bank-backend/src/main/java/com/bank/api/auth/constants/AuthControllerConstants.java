@@ -8,6 +8,8 @@ public final class AuthControllerConstants {
 
     public static final String GENERATE_PASSWORD_MAPPING = "/login";
 
+    public static final String LOGOUT_MAPPING = "/logout";
+
     private AuthControllerConstants() {
 
     }

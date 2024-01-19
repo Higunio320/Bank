@@ -2,6 +2,7 @@ package com.bank.api.auth;
 
 import com.bank.api.auth.data.AuthenticationRequest;
 import com.bank.api.auth.data.AuthenticationResponse;
+import com.bank.api.auth.data.LogoutRequest;
 import com.bank.api.auth.data.PasswordValidationRequest;
 import com.bank.api.auth.data.TokenResponse;
 import com.bank.api.auth.interfaces.AuthController;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.bank.api.auth.constants.AuthControllerConstants.AUTHENTICATE_MAPPING;
 import static com.bank.api.auth.constants.AuthControllerConstants.AUTH_API_MAPPING;
 import static com.bank.api.auth.constants.AuthControllerConstants.GENERATE_PASSWORD_MAPPING;
+import static com.bank.api.auth.constants.AuthControllerConstants.LOGOUT_MAPPING;
 
 @RestController
 @RequestMapping(AUTH_API_MAPPING)
@@ -36,5 +38,12 @@ public class AuthControllerImpl implements AuthController {
     @PostMapping(AUTHENTICATE_MAPPING)
     public final ResponseEntity<TokenResponse> authenticate(@RequestBody PasswordValidationRequest request) {
         return ResponseEntity.ok(authService.authenticate(request));
+    }
+
+    @Override
+    @PostMapping(LOGOUT_MAPPING)
+    public final ResponseEntity<Object> logout(@RequestBody LogoutRequest logoutRequest) {
+        authService.logout(logoutRequest.token());
+        return ResponseEntity.ok().build();
     }
 }

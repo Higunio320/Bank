@@ -7,12 +7,17 @@ import com.bank.api.auth.data.TokenResponse;
 import com.bank.api.auth.interfaces.AuthService;
 import com.bank.config.auth.BankAuthentication;
 import com.bank.config.jwt.interfaces.JwtService;
+import com.bank.entities.invalidtoken.InvalidToken;
+import com.bank.entities.invalidtoken.interfaces.InvalidTokenRepository;
 import com.bank.entities.user.User;
 import com.bank.entities.user.interfaces.UserRepository;
 import com.bank.entities.user.password.Password;
 import com.bank.entities.user.password.interfaces.PasswordRepository;
 import com.bank.utils.exceptions.authorization.BadCredentialsException;
+import com.bank.utils.exceptions.tokens.ExpiredTokenException;
+import com.bank.utils.exceptions.tokens.InvalidTokenException;
 import com.bank.utils.passwords.interfaces.PasswordGenerator;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,11 +43,15 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordRepository passwordRepository;
     private final PasswordEncoder passwordEncoder;
+    private final InvalidTokenRepository invalidTokenRepository;
 
     private static final int NUM_OF_PASSWORDS = 10;
     private static final int PASSWORD_LENGTH = 10;
 
     private static final String GETTING_USER_BY_LOGIN = "Getting user by login: {}";
+    private static final String SAVING_INVALID_TOKEN = "Saving token in expired tokens";
+    private static final String TOKEN_ALREADY_USED = "Token has already been used";
+    private static final String INVALID_TOKEN = "Invalid token";
 
     @Override
     public final AuthenticationResponse generatePassword(AuthenticationRequest request) {
@@ -83,6 +93,23 @@ public class AuthServiceImpl implements AuthService {
         String token = request.token();
         String password = request.password();
 
+        if(invalidTokenRepository.existsByToken(token)) {
+            log.info(TOKEN_ALREADY_USED);
+            throw new ExpiredTokenException();
+        } else {
+            try {
+                log.info(SAVING_INVALID_TOKEN);
+                Instant expirationDate = jwtService.extractExpirationDate(token);
+                InvalidToken expiredToken = InvalidToken.builder()
+                        .token(token)
+                        .expirationDate(expirationDate)
+                        .build();
+                invalidTokenRepository.save(expiredToken);
+            } catch(RuntimeException e) {
+                throw new InvalidTokenException();
+            }
+        }
+
         String username;
         String indexesString;
 
@@ -91,8 +118,8 @@ public class AuthServiceImpl implements AuthService {
             username = jwtService.extractUsername(token);
             indexesString = jwtService.extractIndexes(token);
         } catch (RuntimeException e) {
-            passwordEncoder.encode(password);
-            throw new BadCredentialsException();
+            log.info(INVALID_TOKEN);
+            throw new InvalidTokenException();
         }
 
         log.info(GETTING_USER_BY_LOGIN, username);
@@ -132,6 +159,7 @@ public class AuthServiceImpl implements AuthService {
     //only for the example data purposes
     @Override
     public void register(String username, String password) {
+        log.info("Registering user: {}", username);
         List<Password> passwords = passwordGenerator.generatePasswords(password,
                 NUM_OF_PASSWORDS, PASSWORD_LENGTH);
 
@@ -143,6 +171,40 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         log.info("Saved user: {}", userRepository.save(user));
+    }
+
+    @Override
+    public final void logout(String token) {
+        log.info("Logging out user");
+        if(invalidTokenRepository.existsByToken(token)) {
+            log.info(TOKEN_ALREADY_USED);
+            throw new ExpiredTokenException();
+        }
+
+        log.info("Getting username and expiration date from token");
+
+        String username;
+        Instant expirationDate;
+
+        try {
+            username = jwtService.extractUsernameFromSubject(token);
+            expirationDate = jwtService.extractExpirationDate(token);
+        } catch (ExpiredJwtException e) {
+            log.info("Token already expired");
+            return;
+        } catch (RuntimeException e) {
+            log.info(INVALID_TOKEN);
+            throw new InvalidTokenException();
+        }
+
+        log.info("Logging out user with username: {}", username);
+
+        InvalidToken expiredToken = InvalidToken.builder()
+                .token(token)
+                .expirationDate(expirationDate)
+                .build();
+
+        invalidTokenRepository.save(expiredToken);
     }
 
     private String getIndexesString(List<Integer> indexes) {

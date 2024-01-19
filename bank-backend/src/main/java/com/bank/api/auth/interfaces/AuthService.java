@@ -12,4 +12,6 @@ public interface AuthService {
     TokenResponse authenticate(PasswordValidationRequest request);
 
     void register(String username, String password);
+
+    void logout(String token);
 }

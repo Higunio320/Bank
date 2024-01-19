@@ -6,12 +6,12 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtServiceImpl implements JwtService {
 
     private static final String SECRET_KEY = System.getenv("JWT_KEY");
@@ -28,27 +29,36 @@ public class JwtServiceImpl implements JwtService {
     private static final String USERNAME_CLAIM = "username";
 
     @Override
-    public String extractUsernameFromSubject(String token) {
+    public final String extractUsernameFromSubject(String token) {
+        log.info("Extracting subject");
         return extractClaim(token, Claims::getSubject);
     }
 
     @Override
-    public String extractIndexes(String token) {
+    public final String extractIndexes(String token) {
+        log.info("Extracting indexes");
         return extractClaim(token, claims -> claims.get(INDEXES_CLAIM, String.class));
     }
 
     @Override
-    public String extractUsername(String token) {
+    public final String extractUsername(String token) {
+        log.info("Extracting username");
         return extractClaim(token, claims -> claims.get(USERNAME_CLAIM, String.class));
     }
 
     @Override
-    public String generateAuthToken(UserDetails userDetails) {
+    public final Instant extractExpirationDate(String token) {
+        log.info("Extracting expiration date");
+        return extractClaim(token, Claims::getExpiration).toInstant();
+    }
+
+    @Override
+    public final String generateAuthToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, AUTH_EXPIRATION_TIME);
     }
 
     @Override
-    public String generateLoginToken(String username, String indexes) {
+    public final String generateLoginToken(String username, String indexes) {
         Map<String, Object> claims = new HashMap<>(4);
         claims.put(INDEXES_CLAIM, indexes);
         claims.put(USERNAME_CLAIM, username);
@@ -56,7 +66,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public final boolean isTokenValid(String token, UserDetails userDetails) {
         return false;
     }
 
