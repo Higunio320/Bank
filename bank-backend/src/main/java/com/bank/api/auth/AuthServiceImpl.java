@@ -1,8 +1,8 @@
 package com.bank.api.auth;
 
-import com.bank.api.auth.data.AuthenticationRequest;
+import com.bank.api.auth.data.UsernameRequest;
 import com.bank.api.auth.data.AuthenticationResponse;
-import com.bank.api.auth.data.PasswordValidationRequest;
+import com.bank.api.auth.data.PasswordWithTokenRequest;
 import com.bank.api.auth.data.TokenResponse;
 import com.bank.api.auth.interfaces.AuthService;
 import com.bank.config.auth.BankAuthentication;
@@ -15,15 +15,19 @@ import com.bank.entities.user.password.Password;
 import com.bank.entities.user.password.interfaces.PasswordRepository;
 import com.bank.utils.exceptions.authorization.BadCredentialsException;
 import com.bank.utils.exceptions.authorization.UserBlockedException;
+import com.bank.utils.exceptions.passwords.InvalidPasswordException;
 import com.bank.utils.exceptions.tokens.ExpiredTokenException;
 import com.bank.utils.exceptions.tokens.InvalidTokenException;
 import com.bank.utils.passwords.interfaces.PasswordGenerator;
+import com.bank.utils.passwords.interfaces.PasswordValidator;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -33,6 +37,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.random.RandomGenerator;
+
+import static com.bank.config.constants.SecurityConfigConstants.ENV_FRONTEND_URL;
+import static com.bank.config.constants.SecurityConfigConstants.FRONTEND_RESET_PASSWORD_LINK;
 
 @Service
 @Slf4j
@@ -46,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordRepository passwordRepository;
     private final PasswordEncoder passwordEncoder;
     private final InvalidTokenRepository invalidTokenRepository;
+    private final PasswordValidator passwordValidator;
 
     private static final int NUM_OF_PASSWORDS = 10;
     private static final int PASSWORD_LENGTH = 10;
@@ -54,9 +62,10 @@ public class AuthServiceImpl implements AuthService {
     private static final String SAVING_INVALID_TOKEN = "Saving token in expired tokens";
     private static final String TOKEN_ALREADY_USED = "Token has already been used";
     private static final String INVALID_TOKEN = "Invalid token";
+    private static final String FRONTEND_URL = System.getenv(ENV_FRONTEND_URL);
 
     @Override
-    public final AuthenticationResponse generatePassword(AuthenticationRequest request) {
+    public final AuthenticationResponse generatePassword(UsernameRequest request) {
         String username = request.username();
 
         log.info(GETTING_USER_BY_LOGIN, username);
@@ -103,26 +112,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public final TokenResponse authenticate(PasswordValidationRequest request) {
+    public final TokenResponse authenticate(PasswordWithTokenRequest request) {
         String token = request.token();
         String password = request.password();
 
-        if(invalidTokenRepository.existsByToken(token)) {
-            log.info(TOKEN_ALREADY_USED);
-            throw new ExpiredTokenException();
-        } else {
-            try {
-                log.info(SAVING_INVALID_TOKEN);
-                Instant expirationDate = jwtService.extractExpirationDate(token);
-                InvalidToken expiredToken = InvalidToken.builder()
-                        .token(token)
-                        .expirationDate(expirationDate)
-                        .build();
-                invalidTokenRepository.save(expiredToken);
-            } catch(RuntimeException e) {
-                throw new InvalidTokenException();
-            }
-        }
+        checkIfInvalidTokenAndSaveIfNot(token);
 
         String username;
         String indexesString;
@@ -180,25 +174,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    //only for the example data purposes
-    @Override
-    public void register(String username, String password) {
-        log.info("Registering user: {}", username);
-        List<Password> passwords = passwordGenerator.generatePasswords(password,
-                NUM_OF_PASSWORDS, PASSWORD_LENGTH);
-
-        passwordRepository.saveAll(passwords);
-
-        User user = User.builder()
-                .login(username)
-                .passwords(passwords)
-                .incorrectLoginAttempts(0)
-                .unblockTime(Instant.now().minusSeconds(5L))
-                .build();
-
-        log.info("Saved user: {}", userRepository.save(user));
-    }
-
     @Override
     public final void logout(String token) {
         log.info("Logging out user");
@@ -232,6 +207,112 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         invalidTokenRepository.save(expiredToken);
+    }
+
+    @Override
+    public final void requestForPasswordResetMail(String username) {
+        log.info(GETTING_USER_BY_LOGIN, username);
+
+        Optional<User> userOptional = userRepository.findByLogin(username);
+
+        if(userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            String passwordResetToken = jwtService.generatePasswordResetToken(username);
+
+            String url = UriComponentsBuilder.fromUriString(
+                    String.format("%s%s", FRONTEND_URL, FRONTEND_RESET_PASSWORD_LINK))
+                    .queryParam("token", passwordResetToken)
+                    .build().toUriString();
+
+            log.info("Would sent email to: {} with link: {}", user.getEmail(), url);
+        } else {
+            log.info("Username does not exist, not sending password reset link");
+        }
+    }
+
+    @Override
+    public final void passwordReset(String token, String password) {
+        checkIfInvalidTokenAndSaveIfNot(token);
+
+        log.info("Retrieving username from password reset token");
+        String username;
+
+        try {
+            username = jwtService.extractUsernameForPasswordReset(token);
+        } catch(RuntimeException ignored) {
+            throw new InvalidTokenException();
+        }
+
+        if(!passwordValidator.isValid(password)) {
+            throw new InvalidPasswordException();
+        }
+
+        log.info(GETTING_USER_BY_LOGIN, username);
+
+        User user = userRepository.findByLoginWithPasswords(username)
+                .orElseThrow(BadCredentialsException::new);
+
+        List<Password> oldPasswords = user.getPasswords();
+
+        log.info("Generating new passwords for user: {}", username);
+
+        List<Password> newPasswords = passwordGenerator.generatePasswords(password,
+                NUM_OF_PASSWORDS, PASSWORD_LENGTH);
+
+        user.setPasswords(newPasswords);
+
+        log.info("Saving user: {} with new passwords", username);
+
+        passwordRepository.saveAll(newPasswords);
+
+        userRepository.save(user);
+
+        log.info("Deleting old passwords");
+
+        passwordRepository.deleteAll(oldPasswords);
+    }
+
+    //only for the example data purposes
+    @Override
+    public final void register(String username, String password) {
+        log.info("Registering user: {}", username);
+        List<Password> passwords = passwordGenerator.generatePasswords(password,
+                NUM_OF_PASSWORDS, PASSWORD_LENGTH);
+
+        String email = String.format("%s%s", username, "@mail.pl");
+
+        passwordRepository.saveAll(passwords);
+
+        User user = User.builder()
+                .login(username)
+                .passwords(passwords)
+                .email(email)
+                .incorrectLoginAttempts(0)
+                .unblockTime(Instant.now().minusSeconds(5L))
+                .build();
+
+        log.info("Saved user: {}", userRepository.save(user));
+    }
+
+    private void checkIfInvalidTokenAndSaveIfNot(String token) {
+
+        if(invalidTokenRepository.existsByToken(token)) {
+            log.info(TOKEN_ALREADY_USED);
+            throw new ExpiredTokenException();
+        } else {
+            try {
+                log.info(SAVING_INVALID_TOKEN);
+                Instant expirationDate = jwtService.extractExpirationDate(token);
+                InvalidToken expiredToken = InvalidToken.builder()
+                        .token(token)
+                        .expirationDate(expirationDate)
+                        .build();
+                invalidTokenRepository.save(expiredToken);
+            } catch(RuntimeException ignored) {
+                throw new InvalidTokenException();
+            }
+        }
     }
 
     private String getIndexesString(List<Integer> indexes) {

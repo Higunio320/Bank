@@ -23,10 +23,11 @@ import java.util.function.Function;
 public class JwtServiceImpl implements JwtService {
 
     private static final String SECRET_KEY = System.getenv("JWT_KEY");
-    private static final long AUTH_EXPIRATION_TIME = 1000L * 60L * 15L;
-    private static final long LOGIN_EXPIRATION_TIME = 1000L * 60L * 2L;
+    private static final long AUTH_EXPIRATION_TIME = 1000L * 60L * 15L; //15 minutes
+    private static final long LOGIN_EXPIRATION_TIME = 1000L * 30L; //30 seconds
     private static final String INDEXES_CLAIM = "indexes";
     private static final String USERNAME_CLAIM = "username";
+    private static final String USERNAME_PASSWORD_RESET_CLAIM = "username_for_reset";
 
     @Override
     public final String extractUsernameFromSubject(String token) {
@@ -53,6 +54,12 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public String extractUsernameForPasswordReset(String token) {
+        log.info("Extracting username for password reset");
+        return extractClaim(token, claims -> claims.get(USERNAME_PASSWORD_RESET_CLAIM, String.class));
+    }
+
+    @Override
     public final String generateAuthToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, AUTH_EXPIRATION_TIME);
     }
@@ -62,6 +69,13 @@ public class JwtServiceImpl implements JwtService {
         Map<String, Object> claims = new HashMap<>(4);
         claims.put(INDEXES_CLAIM, indexes);
         claims.put(USERNAME_CLAIM, username);
+        return generateToken(claims, null, LOGIN_EXPIRATION_TIME);
+    }
+
+    @Override
+    public final String generatePasswordResetToken(String username) {
+        Map<String, Object> claims = new HashMap<>(2);
+        claims.put(USERNAME_PASSWORD_RESET_CLAIM, username);
         return generateToken(claims, null, LOGIN_EXPIRATION_TIME);
     }
 
@@ -97,10 +111,8 @@ public class JwtServiceImpl implements JwtService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (ExpiredJwtException e) {
-            throw new ExpiredJwtException(null, null, "Token expired");
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid token");
+        } catch (Exception ignored) {
+            throw new RuntimeException("");
         }
     }
 

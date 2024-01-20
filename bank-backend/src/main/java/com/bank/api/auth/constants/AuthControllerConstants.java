@@ -10,6 +10,10 @@ public final class AuthControllerConstants {
 
     public static final String LOGOUT_MAPPING = "/logout";
 
+    public static final String PASSWORD_RESET_MAIL_MAPPING = "/reset-password-mail";
+
+    public static final String PASSWORD_RESET_MAPPING= "/reset-password";
+
     private AuthControllerConstants() {
 
     }
