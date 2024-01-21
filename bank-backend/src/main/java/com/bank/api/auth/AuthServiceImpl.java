@@ -275,7 +275,7 @@ public class AuthServiceImpl implements AuthService {
 
     //only for the example data purposes
     @Override
-    public final void register(String username, String password) {
+    public final User register(String username, String password) {
         log.info("Registering user: {}", username);
         List<Password> passwords = passwordGenerator.generatePasswords(password,
                 NUM_OF_PASSWORDS, PASSWORD_LENGTH);
@@ -292,7 +292,9 @@ public class AuthServiceImpl implements AuthService {
                 .unblockTime(Instant.now().minusSeconds(5L))
                 .build();
 
-        log.info("Saved user: {}", userRepository.save(user));
+        log.info("Saving user: {}", user);
+
+        return userRepository.save(user);
     }
 
     private void checkIfInvalidTokenAndSaveIfNot(String token) {

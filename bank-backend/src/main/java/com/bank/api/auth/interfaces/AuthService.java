@@ -4,6 +4,7 @@ import com.bank.api.auth.data.UsernameRequest;
 import com.bank.api.auth.data.AuthenticationResponse;
 import com.bank.api.auth.data.PasswordWithTokenRequest;
 import com.bank.api.auth.data.TokenResponse;
+import com.bank.entities.user.User;
 
 public interface AuthService {
 
@@ -11,7 +12,7 @@ public interface AuthService {
 
     TokenResponse authenticate(PasswordWithTokenRequest request);
 
-    void register(String username, String password);
+    User register(String username, String password);
 
     void logout(String token);
 

@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -30,6 +31,8 @@ public class Transfer {
     private String receiverName;
 
     private String title;
+
+    private LocalDateTime transferDate;
 
     @Override
     public final boolean equals(Object o) {
