@@ -60,4 +60,23 @@ public class Account {
     public final int hashCode() {
         return this instanceof HibernateProxy hibernateProxy ? hibernateProxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
+
+    public final boolean sendTransfer(double amount) {
+        if(balance < amount) {
+            return false;
+        }
+
+        balance -= amount;
+        return true;
+    }
+
+    public final boolean receiveTransfer(double amount) {
+        //of course very unlikely, but has to be checked
+        if (Double.MAX_VALUE - balance < amount) {
+            return false;
+        }
+
+        balance += amount;
+        return true;
+    }
 }

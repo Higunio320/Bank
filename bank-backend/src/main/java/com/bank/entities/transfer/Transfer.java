@@ -4,13 +4,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 @Entity
@@ -18,21 +23,31 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Transfer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
+    @NotBlank
     private String senderAccountNumber;
 
+    @NotBlank
     private String receiverAccountNumber;
 
+    @NotBlank
+    @Size(max = 50)
     private String receiverName;
 
+    @NotBlank
+    @Size(max = 50)
     private String title;
 
-    private LocalDateTime transferDate;
+    private Instant transferDate;
+
+    private double amount;
 
     @Override
     public final boolean equals(Object o) {

@@ -23,12 +23,14 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
     private final EncryptionService encryptionService;
 
+    private static final String USER_DOES_NOT_HANE_AN_ACCOUNT_MESSAGE = "You don't have an account";
+
     @Override
     public final ResponseEntity<BasicAccountInfoResponse> getBasicAccountInfo(User user) {
         log.info("Getting basic user info for user: {}", user.getUsername());
 
         Account account = accountRepository.getAccountByUser(user)
-                .orElseThrow(AccountNotFoundException::new);
+                .orElseThrow(() -> new AccountNotFoundException(USER_DOES_NOT_HANE_AN_ACCOUNT_MESSAGE));
 
         log.info("Returning basic user info for user: {}", user.getUsername());
 
@@ -40,7 +42,7 @@ public class AccountServiceImpl implements AccountService {
         log.info("Getting sensitive use info for user: {}", user.getUsername());
 
         Account account = accountRepository.getAccountByUser(user)
-                .orElseThrow(AccountNotFoundException::new);
+                .orElseThrow(() -> new AccountNotFoundException(USER_DOES_NOT_HANE_AN_ACCOUNT_MESSAGE));
 
         String encryptionKey = encryptionService.generateKey(user.getUsername());
 
