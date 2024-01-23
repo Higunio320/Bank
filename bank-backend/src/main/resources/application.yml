@@ -4,7 +4,7 @@ logging:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bank
+    url: ${DB_URL}
     username: postgres
     password: postgres
 

@@ -10,6 +10,32 @@ services:
       - bank-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+     - bank-network
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 3s
+      timeout: 2s
+      retries: 5
+  
+  bank-backend:
+    build:
+      context: ./bank-backend
+      args:
+        KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD}
+    ports:
+      - "8443:8443"
+    env_file:
+      - .env
+    depends_on:
+      bank-db:
+        condition: service_healthy
+    networks:
+      - bank-network
 
 volumes:
   bank-data:
+
+networks:
+  bank-network:
+    driver: bridge
