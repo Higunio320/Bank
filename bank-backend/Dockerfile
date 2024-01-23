@@ -25,6 +25,4 @@ RUN keytool -genkeypair \
     -validity 3650 \
     -storepass ${KEYSTORE_PASSWORD}
 
-EXPOSE 8443
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

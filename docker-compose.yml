@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: bank
     volumes:
       - bank-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
      - bank-network
     healthcheck:
@@ -23,13 +21,21 @@ services:
       context: ./bank-backend
       args:
         KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD}
-    ports:
-      - "8443:8443"
     env_file:
       - .env
     depends_on:
       bank-db:
         condition: service_healthy
+    networks:
+      - bank-network
+  
+  bank-proxy:
+    build:
+      context: ./nginx-proxy
+    ports:
+      - "443:443"
+    depends_on:
+      - bank-backend
     networks:
       - bank-network
 
