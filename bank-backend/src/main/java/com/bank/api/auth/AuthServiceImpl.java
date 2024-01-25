@@ -143,6 +143,18 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         }
 
+        Instant unblockTime = user.getUnblockTime();
+
+        if(unblockTime.isAfter(Instant.now())) {
+            Duration duration = Duration.between(Instant.now(), unblockTime);
+            throw new UserBlockedException(
+                    duration.toDaysPart(),
+                    duration.toHoursPart(),
+                    duration.toMinutesPart(),
+                    duration.toSecondsPart()
+            );
+        }
+
         log.info("Getting indexes from string: {}", indexesString);
         List<Integer> indexes = getIndexes(indexesString);
 
@@ -261,6 +273,7 @@ public class AuthServiceImpl implements AuthService {
                 NUM_OF_PASSWORDS, PASSWORD_LENGTH);
 
         user.setPasswords(newPasswords);
+        user.setLastPasswordChange(Instant.now());
 
         log.info("Saving user: {} with new passwords", username);
 
@@ -290,6 +303,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(email)
                 .incorrectLoginAttempts(0)
                 .unblockTime(Instant.now().minusSeconds(5L))
+                .lastPasswordChange(Instant.now().minusSeconds(5L))
                 .build();
 
         log.info("Saving user: {}", user);

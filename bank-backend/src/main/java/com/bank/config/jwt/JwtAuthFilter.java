@@ -3,10 +3,12 @@ package com.bank.config.jwt;
 import com.bank.api.auth.constants.AuthControllerConstants;
 import com.bank.config.jwt.interfaces.JwtService;
 import com.bank.entities.invalidtoken.interfaces.InvalidTokenRepository;
+import com.bank.entities.user.User;
 import com.bank.utils.exceptions.BankException;
 import com.bank.utils.exceptions.BankExceptionHandler;
 import com.bank.utils.exceptions.BankExceptionResponse;
 import com.bank.utils.exceptions.authorization.BadCredentialsException;
+import com.bank.utils.exceptions.authorization.UserBlockedException;
 import com.bank.utils.exceptions.tokens.ExpiredTokenException;
 import com.bank.utils.exceptions.tokens.InvalidTokenException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
@@ -84,6 +88,42 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 userDetails = userDetailsService.loadUserByUsername(userLogin);
             } catch (BadCredentialsException ignored) {
                 writeExceptionToHttpResponse(response, new InvalidTokenException());
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            User user = (User) userDetails;
+
+            Instant unblockTime = user.getUnblockTime();
+            if(unblockTime.isAfter(Instant.now())) {
+                Duration duration = Duration.between(Instant.now(), unblockTime);
+                writeExceptionToHttpResponse(response, new UserBlockedException(
+                        duration.toDaysPart(),
+                        duration.toHoursPart(),
+                        duration.toMinutesPart(),
+                        duration.toSecondsPart()
+                ));
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            Instant lastPasswordChange = user.getLastPasswordChange();
+
+            Instant issuedAt;
+
+            try {
+                issuedAt = jwtService.extractIssuedAt(jwt);
+            } catch (RuntimeException ignored) {
+                writeExceptionToHttpResponse(response, new InvalidTokenException());
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if(issuedAt.isBefore(lastPasswordChange)) {
+                writeExceptionToHttpResponse(response, new ExpiredTokenException());
 
                 filterChain.doFilter(request, response);
                 return;
