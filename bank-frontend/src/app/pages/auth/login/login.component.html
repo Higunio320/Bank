@@ -1,0 +1,42 @@
+<div class="login-container">
+  <h1>Bank login</h1>
+  <form *ngIf="!passwordTime" class="login-form" (ngSubmit)="submitLoginForm()" [formGroup]="loginForm">
+    <mat-form-field>
+      <mat-label>Enter your login</mat-label>
+      <input formControlName="login" matInput placeholder="examplelogin">
+      <mat-error *ngIf="loginForm.controls.login.hasError('required')">
+        Login is <strong>required</strong>
+      </mat-error>
+      <mat-error *ngIf="loginForm.controls.login.hasError('minlength')">
+        Login must have <strong>5 characters minimum</strong>
+      </mat-error>
+      <mat-error *ngIf="loginForm.controls.login.hasError('maxlength')">
+        Login must have <strong>20 characters maximum</strong>
+      </mat-error>
+      <mat-error *ngIf="loginForm.controls.login.hasError('alphanumeric')">
+        Login must contain only <strong>alphanumeric characters</strong>
+      </mat-error>
+    </mat-form-field>
+    <div class="button-row">
+      <button type="button" (click)="requestForPasswordReset()" [disabled]="loginForm.invalid" mat-raised-button color="accent">Forgot my password</button>
+      <button [disabled]="loginForm.invalid" mat-raised-button color="primary">Log in</button>
+    </div>
+  </form>
+
+  <form class="password-form" *ngIf="passwordTime" [formGroup]="passwordForm" (ngSubmit)="submitPasswordForm()">
+    <h2>Type correct password characters</h2>
+    <div class="character-row">
+      <mat-form-field class="password-form-field" *ngFor="let index of indexes; let i = index">
+        <input maxlength="1" style="width: 1em;" matInput [formControlName]="'char' + index">
+        <mat-hint align="start">{{indexes[i]+1}}</mat-hint>
+      </mat-form-field>
+    </div>
+    <div class="button-row">
+      <button type="button" (click)="reset()" mat-raised-button color="accent">Go back</button>
+      <button [disabled]="passwordForm.invalid" mat-raised-button color="primary">Log in</button>
+    </div>
+  </form>
+
+  <mat-spinner [diameter]="50" *ngIf="isWaiting"></mat-spinner>
+</div>
+

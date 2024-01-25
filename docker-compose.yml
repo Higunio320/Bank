@@ -1,0 +1,55 @@
+services:
+  bank-db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: bank
+    volumes:
+      - bank-data:/var/lib/postgresql/data
+    networks:
+      - bank-network
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 3s
+      timeout: 2s
+      retries: 5
+  
+  bank-backend:
+    build:
+      context: ./bank-backend
+      args:
+        KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD}
+    env_file:
+      - .env
+    depends_on:
+      bank-db:
+        condition: service_healthy
+    networks:
+      - bank-network
+  
+  bank-proxy:
+    build:
+      context: ./nginx-proxy
+    ports:
+      - "443:443"
+    depends_on:
+      - bank-frontend
+    networks:
+      - bank-network
+  
+  bank-frontend:
+    build:
+      context: ./bank-frontend
+    networks:
+      - bank-network
+    depends_on:
+      - bank-backend
+
+volumes:
+  bank-data:
+
+networks:
+  bank-network:
+    driver: bridge

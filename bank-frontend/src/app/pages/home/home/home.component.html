@@ -1,0 +1,9 @@
+<mat-toolbar color="primary">
+  <span>Bank</span>
+  <button [routerLink]="['/home/new-transfer']" mat-raised-button color="accent">New Transfer</button>
+  <button class="logout-button" mat-fab (click)="logout()" color="accent">
+    <ng-icon name="ionLogOutOutline" size="2em"></ng-icon>
+  </button>
+</mat-toolbar>
+
+<router-outlet></router-outlet>

@@ -1,0 +1,17 @@
+<div class="account-details-container">
+  <div class="account-info">
+    <h2>Account details</h2>
+    <h3> Account number: {{basicAccountInfo.accountNumber}}</h3>
+    <h3> Balance: {{basicAccountInfo.balance}} PLN</h3>
+    <div class="sensitive-info-container">
+      <div>
+        <h3>Id number: {{sensitiveAccountInfo.idNumber}}</h3>
+        <h3>Card number: {{sensitiveAccountInfo.cardNumber}}</h3>
+      </div>
+      <button type="button" mat-icon-button matSuffix (click)="showSensitiveInfo = !showSensitiveInfo; updateSensitiveInfo()">
+        <mat-icon color="accent">{{showSensitiveInfo ? 'visibility' : 'visibility_off'}}</mat-icon>
+      </button>
+    </div>
+  </div>
+  <button class="go-back-button" (click)="goBack()" type="button" mat-raised-button color="primary">Back</button>
+</div>
