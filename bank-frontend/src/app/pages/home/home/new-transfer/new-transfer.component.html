@@ -73,5 +73,9 @@
     </mat-error>
 
   </mat-form-field>
-  <button [disabled]="transferForm.invalid" mat-raised-button color="primary">Make a transfer</button>
+  <div class="button-row">
+    <button type="button" mat-raised-button color="accent" [routerLink]="['/home/account']">Go back</button>
+    <button [disabled]="transferForm.invalid" mat-raised-button color="primary">Make a transfer</button>
+  </div>
+
 </form>

@@ -3,7 +3,7 @@ import {TransferService} from "../../../../core/services/transfer/transfer.servi
 import {AccountService} from "../../../../core/services/account/account.service";
 import {BasicAccountInfo} from "../../../../core/data/account/basic-account-info";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {Router} from "@angular/router";
+import {Router, RouterLink} from "@angular/router";
 import {AuthService} from "../../../../core/services/auth/auth.service";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {CustomValidators} from "../../../../core/validators/custom-validators";
@@ -23,7 +23,8 @@ import {TransferRequest} from "../../../../core/data/transfer/transfer-request";
     MatInput,
     MatFormFieldModule,
     MatButton,
-    NgIf
+    NgIf,
+    RouterLink
   ],
   templateUrl: './new-transfer.component.html',
   styleUrl: './new-transfer.component.scss'
