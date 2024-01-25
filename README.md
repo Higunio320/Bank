@@ -11,6 +11,7 @@ and change the variables if you need to. Then run
 docker compose build
 docker compose up -d
 ```
+When all containers are ready (it takes a while for backend to start due to hashing) visit https://localhost
 
 # Example users data
 User 1:
