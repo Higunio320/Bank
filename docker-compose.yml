@@ -9,7 +9,9 @@ services:
     volumes:
       - bank-data:/var/lib/postgresql/data
     networks:
-     - bank-network
+      - bank-network
+    ports:
+      - "5432:5432"
     healthcheck:
       test: pg_isready -U postgres
       interval: 3s
@@ -35,9 +37,17 @@ services:
     ports:
       - "443:443"
     depends_on:
-      - bank-backend
+      - bank-frontend
     networks:
       - bank-network
+  
+  bank-frontend:
+    build:
+      context: ./bank-frontend
+    networks:
+      - bank-network
+    depends_on:
+      - bank-backend
 
 volumes:
   bank-data:

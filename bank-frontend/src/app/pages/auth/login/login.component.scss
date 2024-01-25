@@ -1,0 +1,68 @@
+.login-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  align-content: center;
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 1.5em;
+  font-weight: bold;
+}
+
+h2 {
+  font-size: 1em;
+  margin-bottom: 1em;
+  font-weight: bold;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form mat-form-field {
+  min-width: 25em;
+  margin-bottom: 2em;
+}
+
+.character-row {
+  margin-top: 1em;
+  display: flex;
+  flex-direction: row;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  align-content: center;
+}
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  align-content: center;
+}
+
+.button-row button {
+  width: 90%;
+  margin-top: 1em;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.password-form-field {
+  margin-left: 0.3em;
+  margin-right: 0.3em;
+  width: 2em;
+}

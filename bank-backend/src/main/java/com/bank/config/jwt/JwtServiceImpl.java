@@ -25,6 +25,7 @@ public class JwtServiceImpl implements JwtService {
     private static final String SECRET_KEY = System.getenv("JWT_KEY");
     private static final long AUTH_EXPIRATION_TIME = 1000L * 60L * 15L; //15 minutes
     private static final long LOGIN_EXPIRATION_TIME = 1000L * 30L; //30 seconds
+    private static final long PASSWORD_RESET_EXPIRATION_TIME = 1000L * 60L * 5L; //5 minutes
     private static final String INDEXES_CLAIM = "indexes";
     private static final String USERNAME_CLAIM = "username";
     private static final String USERNAME_PASSWORD_RESET_CLAIM = "username_for_reset";
@@ -76,7 +77,7 @@ public class JwtServiceImpl implements JwtService {
     public final String generatePasswordResetToken(String username) {
         Map<String, Object> claims = new HashMap<>(2);
         claims.put(USERNAME_PASSWORD_RESET_CLAIM, username);
-        return generateToken(claims, null, LOGIN_EXPIRATION_TIME);
+        return generateToken(claims, null, PASSWORD_RESET_EXPIRATION_TIME);
     }
 
     @Override

@@ -11,6 +11,6 @@ public class AccountNotFoundException extends BankException {
     private static final long serialVersionUID = -4156195472569291582L;
 
     public AccountNotFoundException(String message) {
-        super(message, HttpStatus.BAD_REQUEST);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

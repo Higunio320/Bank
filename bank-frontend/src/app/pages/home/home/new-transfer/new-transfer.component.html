@@ -1,0 +1,77 @@
+<form (ngSubmit)="submitForm()" [formGroup]="transferForm" class="transfer-form">
+
+  <h1>Transfer form</h1>
+  <mat-form-field>
+    <mat-label>Receiver account number</mat-label>
+    <input maxlength="16" formControlName="receiverAccountNumber" matInput placeholder="0000000000000000">
+
+    <mat-error *ngIf="transferForm.controls.receiverAccountNumber.hasError('required')">
+      Receiver account number is <strong>required</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.receiverAccountNumber.hasError('fixedlength')">
+      Receiver account number must consist of <strong>16</strong> characters
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.receiverAccountNumber.hasError('onlynumbers')">
+      Receiver account number must consist of <strong>only digits [0-9]</strong>
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Receiver name</mat-label>
+    <input formControlName="receiverName" matInput placeholder="John Doe">
+
+    <mat-error *ngIf="transferForm.controls.receiverName.hasError('required')">
+      Receiver name is <strong>required</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.receiverName.hasError('minlength')">
+      Receiver name must have <strong>3 characters minimum</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.receiverName.hasError('maxlength')">
+      Receiver name must have <strong>50 characters maximum</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.receiverName.hasError('alphanumeric')">
+      Receiver name must contain only <strong>alphanumeric characters</strong>
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Title</mat-label>
+    <input formControlName="title" matInput placeholder="Payment for book">
+
+    <mat-error *ngIf="transferForm.controls.title.hasError('required')">
+      Title is <strong>required</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.title.hasError('minlength')">
+      Title must have <strong>3 characters minimum</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.title.hasError('maxlength')">
+      Title must have <strong>50 characters maximum</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.title.hasError('alphanumeric')">
+      Title must contain only <strong>alphanumeric characters</strong>
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Amount</mat-label>
+    <input formControlName="amount" matInput placeholder="12.34">
+
+    <mat-error *ngIf="transferForm.controls.amount.hasError('required')">
+      Amount is <strong>required</strong>
+    </mat-error>
+
+    <mat-error *ngIf="transferForm.controls.amount.hasError('doublenumber')">
+      Amount must be a <strong>proper double number with dot and 2 decimal places</strong>
+    </mat-error>
+
+  </mat-form-field>
+  <button [disabled]="transferForm.invalid" mat-raised-button color="primary">Make a transfer</button>
+</form>

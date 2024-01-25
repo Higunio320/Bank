@@ -82,6 +82,10 @@ public class TransferServiceImpl implements TransferService {
         Account receiverAccount = accountRepository.getAccountByAccountNumber(receiverAccountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(INCORRECT_RECEIVER_ACCOUNT_NUMBER_MESSAGE));
 
+        if(senderAccountNumber.equals(receiverAccountNumber)) {
+            throw new IncorrectTransferException("You cannot send transfer to yourself");
+        }
+
         double amount = transferRequest.amount();
 
         if(amount <= 0.0) {

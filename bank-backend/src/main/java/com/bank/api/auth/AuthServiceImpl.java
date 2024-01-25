@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordValidator passwordValidator;
 
     private static final int NUM_OF_PASSWORDS = 10;
-    private static final int PASSWORD_LENGTH = 10;
+    private static final int PASSWORD_LENGTH = 8;
 
     private static final String GETTING_USER_BY_LOGIN = "Getting user by login: {}";
     private static final String SAVING_INVALID_TOKEN = "Saving token in expired tokens";
@@ -225,7 +225,7 @@ public class AuthServiceImpl implements AuthService {
                     .queryParam("token", passwordResetToken)
                     .build().toUriString();
 
-            log.info("Would sent email to: {} with link: {}", user.getEmail(), url);
+            log.info("Would send email to: {} with link: {}", user.getEmail(), url);
         } else {
             log.info("Username does not exist, not sending password reset link");
         }
@@ -352,12 +352,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private List<Integer> createDummyIndexes() {
-        int size = 10;
-        List<Integer> indexes = new ArrayList<>(size);
+        List<Integer> indexes = new ArrayList<>(PASSWORD_LENGTH);
         SecureRandom random = new SecureRandom();
 
-        while(indexes.size() < size) {
-            Integer index = random.nextInt(30);
+        while(indexes.size() < PASSWORD_LENGTH) {
+            Integer index = random.nextInt(20);
 
             if(!indexes.contains(index)) {
                 indexes.add(index);

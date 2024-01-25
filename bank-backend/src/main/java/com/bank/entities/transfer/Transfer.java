@@ -32,9 +32,11 @@ public class Transfer {
     private long id;
 
     @NotBlank
+    @Size(max = 50)
     private String senderAccountNumber;
 
     @NotBlank
+    @Size(max = 50)
     private String receiverAccountNumber;
 
     @NotBlank
