@@ -92,6 +92,14 @@ public class TransferServiceImpl implements TransferService {
             throw new IncorrectTransferException("Amount cannot be less or equal to 0");
         }
 
+        String amountString = String.valueOf(amount);
+        int dotIndex = amountString.indexOf('.');
+
+        if(dotIndex != amountString.length() - 3) {
+            throw new IncorrectTransferException("Amount needs to have exactly 2 decimal places (can be .00)");
+        }
+
+
         if(!senderAccount.sendTransfer(amount)) {
             throw new IncorrectTransferException("You don't have enough money to make that transfer");
         }
