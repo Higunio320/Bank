@@ -14,6 +14,8 @@ public interface JwtService {
 
     Instant extractExpirationDate(String token);
 
+    Instant extractIssuedAt(String token);
+
     String extractUsernameForPasswordReset(String token);
 
     String generateAuthToken(UserDetails userDetails);

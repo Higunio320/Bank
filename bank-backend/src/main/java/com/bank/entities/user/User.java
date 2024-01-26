@@ -59,6 +59,8 @@ public class User implements UserDetails {
 
     private Instant unblockTime;
 
+    private Instant lastPasswordChange;
+
     @Override
     public final Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();

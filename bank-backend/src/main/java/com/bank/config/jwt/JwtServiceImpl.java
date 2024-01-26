@@ -61,6 +61,12 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public Instant extractIssuedAt(String token) {
+        log.info("Extracting issued at date");
+        return extractClaim(token, Claims::getIssuedAt).toInstant();
+    }
+
+    @Override
     public final String generateAuthToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, AUTH_EXPIRATION_TIME);
     }
